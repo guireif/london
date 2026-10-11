@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>London Planner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--tx:#1b1b1f;--mu:#6b6b73;--bd:#e3e0d8;--ac:#c8102e;--p1:#c8102e;--p2:#d9822b;--p3:#3b7dd8;--p4:#8a8a93;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16161a;--card:#202026;--tx:#f1f1f3;--mu:#a0a0aa;--bd:#33333c;--ac:#ff5a6e}}
+:root[data-theme="dark"]{--bg:#16161a;--card:#202026;--tx:#f1f1f3;--mu:#a0a0aa;--bd:#33333c;--ac:#ff5a6e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,sans-serif}
+header{padding:16px 14px 8px}h1{margin:0;font-size:22px}.sub{color:var(--mu);font-size:13px}
+.bar{height:6px;background:var(--bd);border-radius:3px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);width:0;transition:width .3s}
+.ctl{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 14px;z-index:5;border-bottom:1px solid var(--bd)}
+input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font-size:15px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 0}.chips button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;padding:6px 12px;font-size:13px}
+.chips button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{padding:8px 14px 40px}h2{font-size:15px;margin:18px 0 6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+h2 a{font-size:12px;font-weight:600;color:var(--ac);text-decoration:none;border:1px solid var(--ac);border-radius:12px;padding:4px 10px;white-space:nowrap}
+.it{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:6px}
+.it.done{opacity:.5}.it.done .n{text-decoration:line-through}
+.it input{width:22px;height:22px;flex:none;accent-color:var(--ac)}.m{flex:1;min-width:0}.n{font-weight:600}.t{color:var(--mu);font-size:12px}
+.p{font-size:11px;font-weight:700;color:#fff;border-radius:6px;padding:2px 6px;flex:none}
+.go{flex:none;background:var(--ac);color:#fff;text-decoration:none;border-radius:10px;padding:8px 11px;font-size:13px;font-weight:600}
+.empty{color:var(--mu);text-align:center;padding:30px}
+</style></head><body>
+<header><h1>🇬🇧 London Planner</h1><div class="sub" id="cnt"></div><div class="bar"><i id="pb"></i></div></header>
+<div class="ctl"><input type="search" id="q" placeholder="Search places…">
+<div class="chips" id="cc"></div><div class="chips" id="pc"></div><div class="chips" id="ac"></div></div>
+<main id="out"></main>
+<script>
+const D={
+"Westminster & St James's":["Westminster Abbey|Historic landmark|1","Big Ben / Houses of Parliament|Historic landmark|1","Churchill War Rooms|WWII history|1","Buckingham Palace|Royal landmark|2","St James's Park|Park|2","Tate Britain|Art museum + café|2","The Orange Pimlico|Pub / restaurant|2","Garden Museum|Museum|3"],
+"Mayfair & Piccadilly":["Fortnum & Mason|Department store, biscuits|1","Liberty London|Shopping / architecture|1","Brasserie Zédel|French brasserie|1","Sketch The Gallery|Restaurant / design|2","Bacchanalia Mayfair|Luxury restaurant|2","Brasserie of Light Selfridges|Restaurant|2","Grays Antiques|Vintage watches / antiques|2","Sketch The Glade|Restaurant / bar|3","Sketch Flute|Cocktail bar|3","Barbour Regent Street|Fashion|3","Lucky Time vintage watches|Vintage watches|3*"],
+"Soho, Covent Garden & West End":["Covent Garden|Neighborhood / shopping|1","National Gallery|Art museum|1","Rules Restaurant|Historic British dining|1","Harry Potter and the Cursed Child|Theater|1","Circolo Popolare|Italian|2","Ave Mario|Italian|2","BAO Soho|Taiwanese|2","Outernet London|Digital installations|2","NoMad London|Hotel / dining / bar|2","Royal Opera House|Opera / ballet|2","Somerset House|Historic building / arts|2","The Ivy Asia|Asian restaurant|2","Knoops Covent Garden|Chocolate café|2","The Devil Wears Prada Musical|Musical|2","UNIQLO Covent Garden|Shopping|3","Heard Burger|Casual|3","Barbarossa Soho|Restaurant / bar|3*","Mezzogiorno Soho|Italian|3*","Sinatra Musical|Musical / tribute|3*"],
+"Marylebone, Bloomsbury & King's Cross":["British Museum|History / antiquities|1","Marylebone High Street|Neighborhood / shopping|1","Sir John Soane's Museum|Historic house museum|2","Ye Olde Mitre|Historic pub|2","Nina's Marylebone|Restaurant|2","The Landmark London|Historic hotel / dining|2","Hawksmoor King's Cross|Steakhouse|2*"],
+"Notting Hill":["Notting Hill|Walking / architecture|1","Portobello Road Market|Antiques / shopping|1","Brunch in Notting Hill|Food|1","Pollini Ladbroke Hall|Italian|2","Buns From Home Notting Hill|Bakery|2","Knoops Portobello|Chocolate café|2","BEAR Chocolate Notting Hill|Café|3*"],
+"Chelsea, Knightsbridge & South Ken":["V&A Museum|Art / design|1","Science Museum|Science / technology|2","King's Road|Shopping street|2","Pavilion Road Knightsbridge|Boutique shopping|2","The Grenadier Belgravia|Pub, Beef Wellington|2","Prada Caffè Harrods|Café|2","Sale e Pepe|Italian|2","Maggie Jones's|British restaurant|2","Azzurra Sloane Square|Italian / seafood|2","Alba Chelsea|Italian|2","Cacio e Pepe Chelsea|Italian|3*","RH London The Gallery|Furniture / design|3*"],
+"The City":["Tower of London|Historic fortress|1","Tower Bridge|Landmark|1","St Paul's Cathedral|Landmark|1","Sky Garden|Panoramic views|1","Leadenhall Market|Historic market|2","The Royal Exchange|Shopping / dining|2","The Garden at 120|Rooftop garden|2","Barbican Centre|Brutalist / arts|2","London Mithraeum|Roman site|3","The Parlour City of London|Restaurant / bar|3*"],
+"South Bank & Borough":["Borough Market|Food market|1","The Queen's Walk|Riverside walk|1","Shakespeare's Globe|Historic theater|2","Tate Modern|Modern art|2","Hutong The Shard|Chinese / views|2","Hayward Gallery|Contemporary art|2","National Theatre|Theater|2","Royal Festival Hall|Concert venue|3","Gabriel's Wharf|Shops / food|3","The Golden Hinde|Ship replica|3","The Clink Prison Museum|History|3","Fashion & Textile Museum|Fashion|3","White Cube Bermondsey|Gallery|3","London Eye|Observation wheel|3","BFI IMAX|Cinema|3","The Old Vic|Theater|3","Young Vic|Theater|3","Leake Street Tunnel|Street art|3","SEA LIFE London Aquarium|Aquarium|4"],
+"Battersea, Islington & more":["Battersea Power Station|Shopping / architecture|2","Camden Passage|Antiques / shopping|2","ES Devlin exhibition|Art installation, venue TBC|2*","Noci Islington|Italian|3","Latte at Onsu|Café|3*"],
+"Trips outside London":["Bath|Historic city|1","Cotswolds|Countryside villages|1","Seven Sisters Cliffs|Coastal hiking|1","Oxford|University city|2","Cambridge|University city|2","Windsor Castle|Royal castle|2","Brighton|Seaside|2","Caledonian Sleeper Euston|Overnight train to Scotland|3"]};
+const OUT="Trips outside London",C={1:"var(--p1)",2:"var(--p2)",3:"var(--p3)",4:"var(--p4)"},L={1:"Must-see",2:"Recommended",3:"Optional",4:"Low"};
+let S={},pf=0,af="",cf="",qq="";try{S=JSON.parse(localStorage.getItem("ldn")||"{}")}catch(e){}
+const sv=()=>{try{localStorage.setItem("ldn",JSON.stringify(S))}catch(e){}};
+const CATS=["Restaurants","Cafés & Sweets","Pubs & Bars","Museums & Art","Landmarks & History","Shopping","Shows","Outdoors & Attractions","Trips"];
+function cat(a,n,t){const s=t.toLowerCase();if(a==OUT)return CATS[8];if(/theat|musical|opera|cinema|concert/.test(s))return CATS[6];if(/museum|gallery|\bart\b|exhibition|installation|history|science|street art|antiquities/.test(s))return CATS[3];if(n=="Borough Market")return CATS[0];if(/shop|store|market|fashion|antiques|watches|furniture|boutique/.test(s))return CATS[5];if(/restaurant|italian|dining|brasserie|steakhouse|taiwanese|chinese|asian|casual|seafood|british|french|hotel|^food$/.test(s))return CATS[0];if(/pub|cocktail|\bbar\b/.test(s))return CATS[2];if(/café|bakery|chocolate|coffee/.test(s))return CATS[1];if(/landmark|historic|royal|fortress|roman|ship|castle|brutalist|building/.test(s))return CATS[4];return CATS[7]}
+const all=[];for(const a in D)D[a].forEach(s=>{const[n,t,p]=s.split("|");all.push({a,n,t,p:+p[0],u:p[1]=="*",c:cat(a,n,t)})});
+const loc=i=>i.n+(i.a==OUT?", UK":", London");
+const dir=i=>"https://www.google.com/maps/dir/?api=1&travelmode=transit&destination="+encodeURIComponent(loc(i));
+function chips(){const pc=document.getElementById("pc");pc.innerHTML=[0,1,2,3,4].map(p=>`<button class="${pf==p?"on":""}" onclick="pf=${p};render()">${p?"P"+p+" "+L[p]:"All priorities"}</button>`).join("");
+const ac=document.getElementById("ac");ac.innerHTML=`<button class="${af?"":"on"}" onclick="af='';render()">All areas</button>`+Object.keys(D).map((a,i)=>`<button class="${af==a?"on":""}" data-a="${i}">${a}</button>`).join("");
+ac.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{af=Object.keys(D)[b.dataset.a];render()});
+const cc=document.getElementById("cc");cc.innerHTML=`<button class="${cf?"":"on"}" onclick="cf='';render()">All types</button>`+CATS.map((c,i)=>`<button class="${cf==c?"on":""}" data-c="${i}">${c} (${all.filter(x=>x.c==c).length})</button>`).join("");
+cc.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{cf=CATS[b.dataset.c];render()})}
+function render(){chips();const f=all.filter(i=>(!pf||i.p==pf)&&(!af||i.a==af)&&(!cf||i.c==cf)&&(!qq||(i.n+i.t).toLowerCase().includes(qq)));
+const dn=all.filter(i=>S[i.n]).length;document.getElementById("cnt").textContent=dn+" of "+all.length+" done · tap Directions for transit routes";document.getElementById("pb").style.width=(100*dn/all.length)+"%";
+let h="";for(const a in D){const g=f.filter(i=>i.a==a);if(!g.length)continue;
+const r=g.filter(i=>!S[i.n]&&a!=OUT).slice(0,10);
+const rt=r.length>1?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/${r.map(i=>encodeURIComponent(loc(i))).join("/")}/data=!4m2!4m1!3e2">Walking route</a>`:"";
+h+=`<h2><span>${a} (${g.length})</span>${rt}</h2>`+g.map(i=>`<div class="it ${S[i.n]?"done":""}"><input type="checkbox" ${S[i.n]?"checked":""} data-n="${i.n.replace(/"/g,"&quot;")}"><div class="m"><div class="n">${i.n}${i.u?" ❓":""}</div><div class="t">${i.t}</div></div><span class="p" style="background:${C[i.p]}">P${i.p}</span><a class="go" target="_blank" rel="noopener" href="${dir(i)}">Directions</a></div>`).join("")}
+const o=document.getElementById("out");o.innerHTML=h||'<div class="empty">No matches</div>';
+o.querySelectorAll("input").forEach(c=>c.onchange=()=>{S[c.dataset.n]=c.checked;sv();render()})}
+document.getElementById("q").oninput=e=>{qq=e.target.value.toLowerCase();render()};render();
+</script></body></html>
